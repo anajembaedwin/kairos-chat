@@ -63,13 +63,27 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001
 
-const start = async () => {
+export const start = async () => {
   await initDB()
   httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
   })
 }
 
-start()
+export const autoStart = (options: {
+  mainModule?: NodeModule | null
+  currentModule?: NodeModule
+  startFn?: () => unknown
+} = {}) => {
+  const mainModule = options.mainModule ?? require.main
+  const currentModule = options.currentModule ?? module
+  const startFn = options.startFn ?? start
+
+  if (mainModule === currentModule) {
+    void startFn()
+  }
+}
+
+autoStart()
 
 export { app, httpServer, io }

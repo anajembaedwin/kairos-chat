@@ -4,6 +4,7 @@ const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
   roots: ['<rootDir>/src'],
+  collectCoverageFrom: ['<rootDir>/src/**/*.ts', '!<rootDir>/src/**/*.d.ts'],
   testMatch: ['**/__tests__/**/*.test.ts'],
   moduleNameMapper: {
     '^../index$': '<rootDir>/src/index.ts',

@@ -27,27 +27,31 @@ const mockMessages: Message[] = [
 describe('ChatScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    global.fetch = jest.fn(() =>
+    const fetchMock = jest.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve(mockMessages),
       })
-    ) as jest.Mock
+    )
+    Object.defineProperty(globalThis, 'fetch', { value: fetchMock, writable: true })
   })
 
-  it('renders the user name in the header', () => {
+  it('renders the user name in the header', async () => {
     render(<ChatScreen user="User A" onLogout={jest.fn()} />)
-    expect(screen.getByText('User A')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('Hey!')).toBeInTheDocument())
+    expect(screen.getByText('User A', { selector: 'p' })).toBeInTheDocument()
   })
 
-  it('renders the Leave button', () => {
+  it('renders the Leave button', async () => {
     render(<ChatScreen user="User A" onLogout={jest.fn()} />)
+    await waitFor(() => expect(screen.getByText('Hey!')).toBeInTheDocument())
     expect(screen.getByText('Leave')).toBeInTheDocument()
   })
 
-  it('calls onLogout when Leave is clicked', () => {
+  it('calls onLogout when Leave is clicked', async () => {
     const onLogout = jest.fn()
     render(<ChatScreen user="User A" onLogout={onLogout} />)
+    await waitFor(() => expect(screen.getByText('Hey!')).toBeInTheDocument())
     fireEvent.click(screen.getByText('Leave'))
     expect(onLogout).toHaveBeenCalled()
   })
@@ -62,8 +66,9 @@ describe('ChatScreen', () => {
     })
   })
 
-  it('renders message input placeholder', () => {
+  it('renders message input placeholder', async () => {
     render(<ChatScreen user="User A" onLogout={jest.fn()} />)
+    await waitFor(() => expect(screen.getByText('Hey!')).toBeInTheDocument())
     expect(screen.getByPlaceholderText('Type a message...')).toBeInTheDocument()
   })
 
@@ -94,12 +99,13 @@ describe('ChatScreen', () => {
   })
 
   it('shows empty state when no messages', async () => {
-    global.fetch = jest.fn(() =>
+    const fetchMock = jest.fn(() =>
       Promise.resolve({
         ok: true,
         json: () => Promise.resolve([]),
       })
-    ) as jest.Mock
+    )
+    Object.defineProperty(globalThis, 'fetch', { value: fetchMock, writable: true })
 
     await act(async () => {
       render(<ChatScreen user="User A" onLogout={jest.fn()} />)

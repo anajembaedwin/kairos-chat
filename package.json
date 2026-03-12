@@ -9,7 +9,7 @@
     "build": "vite build",
     "lint": "eslint src --ext .ts,.tsx && eslint server/src --ext .ts",
     "test": "npm run test:client && npm run test:server",
-    "test:client": "jest --config jest.config.ts --passWithNoTests",
+    "test:client": "jest --config jest.config.ts --runInBand --passWithNoTests",
     "test:server": "cd server && npm test"
   },
   "dependencies": {

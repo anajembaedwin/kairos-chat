@@ -33,3 +33,17 @@
     background: #7c6af7;
   }
 }
+
+@layer utilities {
+  .pulse-delay-0 {
+    animation-delay: 0s;
+  }
+
+  .pulse-delay-1 {
+    animation-delay: 0.16s;
+  }
+
+  .pulse-delay-2 {
+    animation-delay: 0.32s;
+  }
+}

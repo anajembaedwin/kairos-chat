@@ -69,8 +69,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
               {[0, 1, 2].map((i) => (
                 <div
                   key={i}
-                  className="w-2 h-2 rounded-full bg-accent animate-pulse-dot"
-                  style={{ animationDelay: `${i * 0.16}s` }}
+                  className={`w-2 h-2 rounded-full bg-accent animate-pulse-dot pulse-delay-${i}`}
                 />
               ))}
             </div>

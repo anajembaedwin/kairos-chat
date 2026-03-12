@@ -11,8 +11,19 @@ jest.mock('../db/index', () => ({
 
 const mockQuery = pool.query as jest.Mock
 
+let consoleErrorSpy: jest.SpyInstance
+
+beforeAll(() => {
+  consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})
+})
+
 afterAll((done) => {
-  httpServer.close(done)
+  consoleErrorSpy.mockRestore()
+  if (httpServer.listening) {
+    httpServer.close(done)
+    return
+  }
+  done()
 })
 
 beforeEach(() => {
