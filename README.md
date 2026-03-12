@@ -518,12 +518,20 @@ npm run test:server
 | `MessageBubble.test.tsx` | Renders message text, sender name, timestamp, own bubble styles, other bubble styles |
 | `LoginScreen.test.tsx` | Renders title, renders both users, button disabled by default, enables on selection, calls onLogin with correct user |
 | `ChatScreen.test.tsx` | Renders user in header, renders Leave button, calls onLogout, loads message history, renders input, emits sendMessage on Enter, shows empty state |
+| `App.test.tsx` | Shows login first then chat after login, logout triggers page reload |
+| `UserContext.test.tsx` | useUser throws outside provider, provider stores and updates user |
+| `useChat.test.tsx` | Connect/disconnect updates state, connect_error sets error, message event appends and clears error, sendMessage emits trimmed payload, fetch failure sets error |
+| `main.test.tsx` | Boots React into #root |
+| `socket.test.ts` | Initializes socket client from VITE_SERVER_URL with autoConnect disabled |
 
 ### Backend Test Coverage
 
 | Test File | Tests |
 |---|---|
 | `messages.test.ts` | GET returns all messages, GET returns empty array, GET returns 500 on DB error, POST creates message, POST returns 400 on missing sender, POST returns 400 on missing text, POST returns 400 on empty sender, POST returns 400 on empty text, POST returns 500 on DB error, GET /health returns ok |
+| `index.socket.test.ts` | Socket sendMessage validates payload and emits error, saves valid message and broadcasts, emits error on DB failure |
+| `start.test.ts` | start initializes DB and listens, autoStart runs when main module matches |
+| `db.test.ts` | Creates pg pool from DATABASE_URL, initDB runs schema creation query |
 
 ---
 
@@ -600,7 +608,7 @@ View the live pipeline status in the **Actions** tab of this repository.
 
 **Edwin Anajemba**
 - GitHub: [@anajembaedwin](https://github.com/anajembaedwin)
-- Email: your@email.com
+- Email: anajembaedwin@gmail.com
 
 ---
 
