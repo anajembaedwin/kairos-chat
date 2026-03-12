@@ -18,9 +18,9 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
   // Auto-scroll to latest message
   useEffect(() => {
-      if (bottomRef.current && typeof bottomRef.current.scrollIntoView === 'function') {
+    if (bottomRef.current && typeof bottomRef.current.scrollIntoView === 'function') {
       bottomRef.current.scrollIntoView({ behavior: 'smooth' })
-      }
+    }
   }, [messages])
 
   const handleSend = () => {
@@ -34,9 +34,10 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
-      {/* Header */}
-      <div className="border-b border-surface-border bg-surface-raised px-4 py-3 flex items-center justify-between">
+    <div className="h-screen flex flex-col overflow-hidden bg-surface">
+
+      {/* Header — fixed at top */}
+      <div className="flex-shrink-0 border-b border-surface-border bg-surface-raised px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center text-sm font-semibold text-white">
             {user.split(' ')[1]}
@@ -54,47 +55,51 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
         </Button>
       </div>
 
-      {/* Error banner */}
+      {/* Error banner — fixed below header */}
       {error && (
-        <div className="bg-red-500/10 border-b border-red-500/20 px-4 py-2 text-xs text-red-400 text-center">
+        <div className="flex-shrink-0 bg-red-500/10 border-b border-red-500/20 px-4 py-2 text-xs text-red-400 text-center">
           {error}
         </div>
       )}
 
-      {/* Messages */}
-      <ScrollArea className="flex-1 px-4 py-4">
-        {loading ? (
-          <div className="flex items-center justify-center h-32">
-            <div className="flex gap-1">
-              {[0, 1, 2].map((i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full bg-accent animate-pulse-dot pulse-delay-${i}`}
+      {/* Messages — scrollable middle section */}
+      <div className="flex-1 min-h-0">
+        <ScrollArea className="h-full px-4 py-4">
+          {loading ? (
+            <div className="flex items-center justify-center h-32">
+              <div className="flex gap-1">
+                {[0, 1, 2].map((i) => (
+                  <div
+                    key={i}
+                    className={`w-2 h-2 rounded-full bg-accent animate-pulse-dot ${
+                      i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 text-ink-faint text-sm">
+              <p>No messages yet.</p>
+              <p>Say hello! 👋</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  isOwn={message.sender === user}
                 />
               ))}
+              <div ref={bottomRef} />
             </div>
-          </div>
-        ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-32 text-ink-faint text-sm">
-            <p>No messages yet.</p>
-            <p>Say hello! 👋</p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                isOwn={message.sender === user}
-              />
-            ))}
-            <div ref={bottomRef} />
-          </div>
-        )}
-      </ScrollArea>
+          )}
+        </ScrollArea>
+      </div>
 
-      {/* Input */}
-      <div className="border-t border-surface-border bg-surface-raised px-4 py-3">
+      {/* Input — fixed at bottom */}
+      <div className="flex-shrink-0 border-t border-surface-border bg-surface-raised px-4 py-3">
         <div className="flex gap-2 max-w-3xl mx-auto">
           <Input
             value={input}
@@ -116,6 +121,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
           </Button>
         </div>
       </div>
+
     </div>
   )
 }
