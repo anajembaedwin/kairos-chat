@@ -123,11 +123,21 @@ kairos-chat/
 │   └── workflows/
 │       └── test.yml                  # GitHub Actions CI/CD pipeline
 │
+├── .vscode/
+│   └── settings.json                 # Workspace editor settings
+│
+├── coverage/                         # Jest coverage output (generated)
+│
 ├── src/                              # React frontend
 │   ├── __tests__/                    # Frontend test suites
-│   │   ├── ChatScreen.test.tsx       # ChatScreen component tests
-│   │   ├── LoginScreen.test.tsx      # LoginScreen component tests
-│   │   └── MessageBubble.test.tsx    # MessageBubble component tests
+│   │   ├── App.test.tsx
+│   │   ├── ChatScreen.test.tsx
+│   │   ├── LoginScreen.test.tsx
+│   │   ├── main.test.tsx
+│   │   ├── MessageBubble.test.tsx
+│   │   ├── socket.test.ts
+│   │   ├── useChat.test.tsx
+│   │   └── UserContext.test.tsx
 │   │
 │   ├── components/                   # React components
 │   │   ├── ui/                       # shadcn/ui base components
@@ -159,20 +169,34 @@ kairos-chat/
 │   └── vite-env.d.ts                 # Vite environment type declarations
 │
 ├── server/                           # Express backend
-│   └── src/
-│       ├── __tests__/
-│       │   └── messages.test.ts      # REST endpoint + integration tests
-│       │
-│       ├── db/
-│       │   └── index.ts              # PostgreSQL pool + schema migration
-│       │
-│       ├── middleware/
-│       │   └── validate.ts           # Request validation middleware
-│       │
-│       ├── routes/
-│       │   └── messages.ts           # /api/messages route handlers
-│       │
-│       └── index.ts                  # Express + Socket.io server entry point
+│   ├── coverage/                     # Jest coverage output (generated)
+│   │
+│   ├── src/
+│   │   ├── __tests__/
+│   │   │   ├── db.test.ts
+│   │   │   ├── index.socket.test.ts
+│   │   │   ├── messages.test.ts
+│   │   │   └── start.test.ts
+│   │   │
+│   │   ├── db/
+│   │   │   └── index.ts              # PostgreSQL pool + schema migration
+│   │   │
+│   │   ├── middleware/
+│   │   │   └── validate.ts           # Request validation middleware
+│   │   │
+│   │   ├── routes/
+│   │   │   └── messages.ts           # /api/messages route handlers
+│   │   │
+│   │   ├── index.ts                  # Express + Socket.io server entry point
+│   │   └── types.ts                  # Backend types
+│   │
+│   ├── .env
+│   ├── .eslintrc.json
+│   ├── jest.config.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── tsconfig.test.json
 │
 ├── .env                              # Frontend environment variables (git-ignored)
 ├── .env.example                      # Example environment variables
@@ -180,6 +204,7 @@ kairos-chat/
 ├── .gitignore
 ├── index.html                        # Vite HTML entry point
 ├── jest.config.ts                    # Jest config for frontend
+├── package-lock.json
 ├── package.json                      # Root package.json
 ├── postcss.config.js                 # PostCSS config
 ├── tailwind.config.js                # Tailwind CSS config
