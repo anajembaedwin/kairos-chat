@@ -1,7 +1,6 @@
 import type { Config } from 'jest'
 
 const config: Config = {
-  preset: 'ts-jest',
   testEnvironment: 'jsdom',
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
@@ -9,6 +8,14 @@ const config: Config = {
     '^@/(.*)$': '<rootDir>/src/$1',
   },
   testMatch: ['<rootDir>/src/__tests__/**/*.test.tsx'],
+  transform: {
+    '^.+\\.tsx?$': [
+      'ts-jest',
+      {
+        tsconfig: './tsconfig.jest.json',
+      },
+    ],
+  },
 }
 
 export default config

@@ -3,7 +3,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { MessageBubble } from '@/components/MessageBubble'
-import { useChat } from '@/hooks/UseChat'
+import { useChat } from '@/hooks/useChat'
 import { User } from '@/types'
 
 interface ChatScreenProps {
@@ -18,7 +18,9 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
   // Auto-scroll to latest message
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+      if (bottomRef.current && typeof bottomRef.current.scrollIntoView === 'function') {
+      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+      }
   }, [messages])
 
   const handleSend = () => {

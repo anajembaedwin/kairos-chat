@@ -3,12 +3,12 @@ import type { Config } from 'jest'
 const config: Config = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  globals: {
-    'ts-jest': {
-      tsconfig: './tsconfig.test.json',
-    },
+  roots: ['<rootDir>/src'],
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  moduleNameMapper: {
+    '^../index$': '<rootDir>/src/index.ts',
+    '^../db$': '<rootDir>/src/db/index.ts',
   },
-  testMatch: ['<rootDir>/src/__tests__/**/*.test.ts'],
 }
 
 export default config
