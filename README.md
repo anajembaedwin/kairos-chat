@@ -12,6 +12,7 @@
 ## Table of Contents
 
 - [Overview](#overview)
+- [Screenshots](#screenshots)
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
@@ -48,6 +49,22 @@ The application supports:
 - Responsive mobile-first UI built with Tailwind CSS and shadcn/ui
 - Full test coverage on critical paths (frontend + backend)
 - Automated CI/CD pipeline via GitHub Actions
+
+---
+
+## Screenshots
+
+### Login
+
+![Login screen](assets/screenshots/login.png)
+
+### Chat (User A)
+
+![Chat screen (User A)](assets/screenshots/user-a-chat.png)
+
+### Chat (User B)
+
+![Chat screen (User B)](assets/screenshots/user-b-chat.png)
 
 ---
 
@@ -122,6 +139,12 @@ kairos-chat/
 ├── .github/
 │   └── workflows/
 │       └── test.yml                  # GitHub Actions CI/CD pipeline
+│
+├── assets/
+│   └── screenshots/                  # README screenshots
+│       ├── login.png
+│       ├── user-a-chat.png
+│       └── user-b-chat.png
 │
 ├── .vscode/
 │   └── settings.json                 # Workspace editor settings
