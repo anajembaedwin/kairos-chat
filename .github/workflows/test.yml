@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install root dependencies
+        run: npm install
+
+      - name: Install server dependencies
+        run: cd server && npm install
+
+      - name: Lint frontend
+        run: npx eslint src --ext .ts,.tsx --max-warnings=0
+
+      - name: Lint server
+        run: cd server && npx eslint src --ext .ts --max-warnings=0
+
+      - name: Run frontend tests
+        run: npm run test:client
+
+      - name: Run server tests
+        run: npm run test:server
+
+      - name: Build frontend
+        run: npm run build
