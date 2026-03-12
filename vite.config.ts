@@ -4,11 +4,12 @@ import path from 'path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
+  const serverUrl = env.VITE_SERVER_URL ?? ''
 
   return {
     plugins: [react()],
     define: {
-      'process.env.VITE_SERVER_URL': JSON.stringify(env.VITE_SERVER_URL),
+      'process.env.VITE_SERVER_URL': JSON.stringify(serverUrl),
     },
     resolve: {
       alias: { '@': path.resolve(__dirname, './src') },
