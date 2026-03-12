@@ -3,6 +3,9 @@ import http from 'http'
 import { Server } from 'socket.io'
 import cors from 'cors'
 import dotenv from 'dotenv'
+import { initDB, pool } from './db'
+import messagesRouter from './routes/messages'
+import { Message, CreateMessageBody } from './types'
 
 dotenv.config()
 
@@ -23,8 +26,35 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
+app.use('/api/messages', messagesRouter)
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
+
+  socket.on('sendMessage', async (data: CreateMessageBody) => {
+    const { sender, text } = data
+
+    // Validate
+    if (!sender || sender.trim() === '' || !text || text.trim() === '') {
+      socket.emit('error', { error: 'sender and text are required' })
+      return
+    }
+
+    try {
+      // Save to DB
+      const result = await pool.query<Message>(
+        'INSERT INTO messages (sender, text) VALUES ($1, $2) RETURNING *',
+        [sender.trim(), text.trim()]
+      )
+      const message = result.rows[0]
+
+      // Broadcast to ALL connected clients including sender
+      io.emit('message', message)
+    } catch (error) {
+      console.error('Socket sendMessage error:', error)
+      socket.emit('error', { error: 'Failed to save message' })
+    }
+  })
 
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id)
@@ -33,8 +63,13 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001
 
-httpServer.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
-})
+const start = async () => {
+  await initDB()
+  httpServer.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`)
+  })
+}
+
+start()
 
 export { app, httpServer, io }
