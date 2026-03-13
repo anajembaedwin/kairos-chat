@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { socket } from '@/lib/socket'
 import { Message } from '@/types'
 
+const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
+
 export const useChat = (user: string | null) => {
   const [messages, setMessages] = useState<Message[]>([])
   const [loading, setLoading] = useState(true)
@@ -12,7 +14,7 @@ export const useChat = (user: string | null) => {
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch('/api/messages')
+        const res = await fetch(`${SERVER_URL}/api/messages`)
         if (!res.ok) throw new Error('Failed to load messages')
         const data: Message[] = await res.json()
         setMessages(data)
