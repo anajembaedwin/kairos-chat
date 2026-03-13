@@ -12,14 +12,16 @@ dotenv.config()
 const app = express()
 const httpServer = http.createServer(app)
 
+const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/$/, '')
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: clientUrl,
     methods: ['GET', 'POST'],
   },
 })
 
-app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }))
+app.use(cors({ origin: clientUrl }))
 app.use(express.json())
 
 app.get('/health', (_req, res) => {
