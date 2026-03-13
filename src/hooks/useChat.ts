@@ -71,10 +71,14 @@ export const useChat = (user: User | null) => {
 
     socket.on('message', (message: Message) => {
       setMessages((prev) => {
-        // Replace optimistic message if exists, otherwise append
-        const exists = prev.find(m => m.id === message.id)
-        if (exists) return prev
-        return [...prev, { ...message, status: 'delivered' }]
+        // Remove any optimistic message from same sender with same text
+        const withoutOptimistic = prev.filter(m =>
+          !(m.status === 'sending' && m.sender === message.sender && m.text === message.text)
+        )
+        // Check if real message already exists
+        const alreadyExists = withoutOptimistic.find(m => m.id === message.id)
+        if (alreadyExists) return withoutOptimistic
+        return [...withoutOptimistic, { ...message, status: 'delivered' }]
       })
       setError(null)
     })
