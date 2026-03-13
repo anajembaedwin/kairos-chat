@@ -21,7 +21,12 @@ const io = new Server(httpServer, {
   },
 })
 
-app.use(cors({ origin: clientUrl }))
+app.use(cors({
+  origin: clientUrl,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}))
 app.use(express.json())
 
 app.get('/health', (_req, res) => {
