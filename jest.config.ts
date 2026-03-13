@@ -15,7 +15,7 @@ const config: Config = {
   testMatch: ['<rootDir>/src/__tests__/**/*.test.ts?(x)'],
   transform: {
     '^.+\\.tsx?$': [
-      'ts-jest',
+      '<rootDir>/jest/tsJestImportMetaEnv.cjs',
       {
         tsconfig: './tsconfig.jest.json',
       },
