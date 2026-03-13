@@ -35,20 +35,36 @@ app.get('/health', (_req, res) => {
 
 app.use('/api/messages', messagesRouter)
 
+// Track online users: socketId -> username
+const onlineUsers = new Map<string, string>()
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
 
+  // User comes online
+  socket.on('userOnline', (username: string) => {
+    onlineUsers.set(socket.id, username)
+    // Broadcast updated online users list to all clients
+    io.emit('onlineUsers', Array.from(onlineUsers.values()))
+    console.log(`${username} is online`)
+  })
+
+  // Typing indicator
+  socket.on('typing', (data: { sender: string; isTyping: boolean }) => {
+    // Broadcast to everyone except the sender
+    socket.broadcast.emit('userTyping', data)
+  })
+
+  // Send message
   socket.on('sendMessage', async (data: CreateMessageBody) => {
     const { sender, text } = data
 
-    // Validate
     if (!sender || sender.trim() === '' || !text || text.trim() === '') {
       socket.emit('error', { error: 'sender and text are required' })
       return
     }
 
     try {
-      // Save to DB
       const result = await pool.query<Message>(
         'INSERT INTO messages (sender, text) VALUES ($1, $2) RETURNING *',
         [sender.trim(), text.trim()]
@@ -57,40 +73,34 @@ io.on('connection', (socket) => {
 
       // Broadcast to ALL connected clients including sender
       io.emit('message', message)
+
+      // Send delivery confirmation back to sender
+      socket.emit('messageDelivered', { id: message.id })
     } catch (error) {
       console.error('Socket sendMessage error:', error)
       socket.emit('error', { error: 'Failed to save message' })
     }
   })
 
+  // User disconnects
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id)
+    const username = onlineUsers.get(socket.id)
+    onlineUsers.delete(socket.id)
+    // Broadcast updated online users list
+    io.emit('onlineUsers', Array.from(onlineUsers.values()))
+    console.log(`${username || socket.id} disconnected`)
   })
 })
 
 const PORT = process.env.PORT || 3001
 
-export const start = async () => {
+const start = async () => {
   await initDB()
   httpServer.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
   })
 }
 
-export const autoStart = (options: {
-  mainModule?: NodeModule | null
-  currentModule?: NodeModule
-  startFn?: () => unknown
-} = {}) => {
-  const mainModule = options.mainModule ?? require.main
-  const currentModule = options.currentModule ?? module
-  const startFn = options.startFn ?? start
-
-  if (mainModule === currentModule) {
-    void startFn()
-  }
-}
-
-autoStart()
+start()
 
 export { app, httpServer, io }

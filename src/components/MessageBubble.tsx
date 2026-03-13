@@ -23,7 +23,23 @@ export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
       >
         {message.text}
       </div>
-      <span className="text-xs text-ink-faint px-1">{time}</span>
+      <div className="flex items-center gap-1 px-1">
+        <span className="text-xs text-ink-faint">{time}</span>
+        {isOwn && (
+          <span className="text-xs">
+            {message.status === 'sending' ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4a4a60" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="16" height="12" viewBox="0 0 28 17" fill="none" stroke="#7c6af7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="1 9 6 14 14 4" />
+                <polyline points="10 9 15 14 26 4" />
+              </svg>
+            )}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
