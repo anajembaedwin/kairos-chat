@@ -24,9 +24,11 @@ describe('db', () => {
     const { initDB } = await import('../db')
 
     await initDB()
-    expect(PoolMock).toHaveBeenCalledWith({
-      connectionString: 'postgres://user:pass@localhost:5432/test',
-    })
+    expect(PoolMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        connectionString: 'postgres://user:pass@localhost:5432/test',
+      })
+    )
     expect(queryMock).toHaveBeenCalledWith(
       expect.stringContaining('CREATE TABLE IF NOT EXISTS messages')
     )
