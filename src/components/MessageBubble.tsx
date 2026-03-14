@@ -1,15 +1,33 @@
+import { useState, useEffect } from 'react'
 import { Message } from '@/types'
+import { getMessageTime, getRelativeTime } from '@/lib/dateUtils'
 
 interface MessageBubbleProps {
   message: Message
   isOwn: boolean
 }
 
+const SWITCH_TO_ABSOLUTE_AFTER_MINUTES = 60
+
 export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
-  const time = new Date(message.created_at).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const getDisplayTime = () => {
+    const messageDate = new Date(message.created_at)
+    const minutesAgo = (Date.now() - messageDate.getTime()) / 1000 / 60
+    return minutesAgo < SWITCH_TO_ABSOLUTE_AFTER_MINUTES
+      ? getRelativeTime(message.created_at)
+      : getMessageTime(message.created_at)
+  }
+
+  const [displayTime, setDisplayTime] = useState(getDisplayTime)
+
+  useEffect(() => {
+    // Update every 30 seconds while message is recent
+    const interval = setInterval(() => {
+      setDisplayTime(getDisplayTime())
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [message.created_at])
 
   return (
     <div className={`flex flex-col gap-1 animate-slide-up ${isOwn ? 'items-end' : 'items-start'}`}>
@@ -24,7 +42,9 @@ export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
         {message.text}
       </div>
       <div className="flex items-center gap-1 px-1">
-        <span className="text-xs text-ink-faint">{time}</span>
+        <span className="text-xs text-ink-faint transition-all">
+          {displayTime}
+        </span>
         {isOwn && (
           <span className="text-xs">
             {message.status === 'sending' ? (
