@@ -20,20 +20,20 @@ router.get('/', async (req: Request, res: Response) => {
         SELECT * FROM (
           SELECT * FROM messages
           WHERE id < $1
-          ORDER BY created_at DESC
+          ORDER BY id DESC
           LIMIT $2
         ) sub
-        ORDER BY created_at ASC
+        ORDER BY id ASC
       `
       params = [before, limit]
     } else {
       query = `
         SELECT * FROM (
           SELECT * FROM messages
-          ORDER BY created_at DESC
+          ORDER BY id DESC
           LIMIT $1
         ) sub
-        ORDER BY created_at ASC
+        ORDER BY id ASC
       `
       params = [limit]
     }

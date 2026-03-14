@@ -20,8 +20,12 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const scrollViewportRef = useRef<HTMLDivElement>(null)
   const prevScrollHeightRef = useRef<number>(0)
+  const prevScrollTopRef = useRef<number>(0)
+  const isNearBottomRef = useRef(true)
+  const isPrependingRef = useRef(false)
+  const didInitialScrollRef = useRef(false)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const {
@@ -42,12 +46,25 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
   const isOtherOnline = onlineUsers.includes(otherUser)
   const charLimit = 500
 
+  useEffect(() => {
+    didInitialScrollRef.current = false
+    isNearBottomRef.current = true
+    isPrependingRef.current = false
+  }, [user])
+
   // Auto-scroll to latest message
   useEffect(() => {
-    if (bottomRef.current && typeof bottomRef.current.scrollIntoView === 'function') {
-      bottomRef.current.scrollIntoView({ behavior: 'smooth' })
+    if (isPrependingRef.current) return
+
+    if (!didInitialScrollRef.current && !loading && messages.length > 0) {
+      didInitialScrollRef.current = true
+      bottomRef.current?.scrollIntoView({ behavior: 'auto' })
+      return
     }
-  }, [messages, typingUser])
+
+    if (!isNearBottomRef.current && messages.length > 0) return
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [loading, messages, typingUser])
 
   // Auto-resize textarea
   useEffect(() => {
@@ -59,10 +76,14 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
   // Preserve scroll position when older messages are prepended
   useEffect(() => {
-    if (!loadingMore && scrollAreaRef.current) {
-      const newScrollHeight = scrollAreaRef.current.scrollHeight
+    const viewport = scrollViewportRef.current
+    if (!viewport) return
+
+    if (!loadingMore && isPrependingRef.current) {
+      const newScrollHeight = viewport.scrollHeight
       const diff = newScrollHeight - prevScrollHeightRef.current
-      scrollAreaRef.current.scrollTop = diff
+      viewport.scrollTop = prevScrollTopRef.current + diff
+      isPrependingRef.current = false
     }
   }, [loadingMore])
 
@@ -83,8 +104,14 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
   const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget
+
+    const distanceFromBottom = target.scrollHeight - target.scrollTop - target.clientHeight
+    isNearBottomRef.current = distanceFromBottom < 80
+
     if (target.scrollTop < 50 && hasMore && !loadingMore) {
       prevScrollHeightRef.current = target.scrollHeight
+      prevScrollTopRef.current = target.scrollTop
+      isPrependingRef.current = true
       loadMoreMessages()
     }
   }, [hasMore, loadingMore, loadMoreMessages])
@@ -179,11 +206,13 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
       {/* Messages */}
       <div className="flex-1 min-h-0 relative">
-        <ScrollArea className="h-full">
+        <ScrollArea
+          className="h-full"
+          viewportRef={scrollViewportRef}
+          viewportProps={{ onScroll: handleScroll }}
+        >
           <div
-            ref={scrollAreaRef}
-            onScroll={handleScroll}
-            className="h-full px-4 py-4 overflow-y-auto"
+            className="h-full px-4 py-4"
           >
             {loading ? (
               <div className="flex items-center justify-center h-32">
@@ -242,8 +271,11 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
                     <button
                       aria-label="Load older messages"
                       onClick={() => {
-                        if (scrollAreaRef.current) {
-                          prevScrollHeightRef.current = scrollAreaRef.current.scrollHeight
+                        const viewport = scrollViewportRef.current
+                        if (viewport) {
+                          prevScrollHeightRef.current = viewport.scrollHeight
+                          prevScrollTopRef.current = viewport.scrollTop
+                          isPrependingRef.current = true
                         }
                         loadMoreMessages()
                       }}
@@ -297,7 +329,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
             )}
           </div>
         </ScrollArea>
-        <ScrollToBottom scrollRef={scrollAreaRef} bottomRef={bottomRef} />
+        <ScrollToBottom scrollRef={scrollViewportRef} bottomRef={bottomRef} />
       </div>
 
       {/* Input */}
