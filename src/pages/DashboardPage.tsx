@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/context/AuthContext'
 import { apiPost, ApiError } from '@/lib/api'
+import { extractSessionId } from '@/lib/sessionId'
 
 type CreateSessionResponse = { id: string; url: string }
 type JoinSessionResponse = { ok: true; session: { id: string } }
@@ -43,9 +44,12 @@ export const DashboardPage = () => {
 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault()
-    const sessionId = joinId.trim().toLowerCase()
-    if (!sessionId) return
     setError(null)
+    const sessionId = extractSessionId(joinId)
+    if (!sessionId) {
+      setError('Enter a session ID (e.g. abc123) or a full session link.')
+      return
+    }
 
     try {
       await apiPost<JoinSessionResponse>(`/api/sessions/${encodeURIComponent(sessionId)}/join`, undefined, {
@@ -102,7 +106,7 @@ export const DashboardPage = () => {
               disabled={creating}
               className="inline-flex items-center justify-center rounded-lg bg-accent hover:bg-accent-hover text-white font-medium h-10 px-4 transition-colors disabled:opacity-50"
             >
-              {creating ? 'Creating…' : 'Create session'}
+              {creating ? 'Creating...' : 'Create session'}
             </button>
 
             {sessionUrl && (
@@ -127,14 +131,14 @@ export const DashboardPage = () => {
         <section className="rounded-2xl border border-surface-border bg-surface-raised p-5">
           <div className="text-sm font-semibold">Join a session</div>
           <p className="text-sm text-ink-muted mt-1">
-            Paste a session ID from a link to join.
+            Paste a full session link (…/session/abc123) or just the session ID.
           </p>
 
           <form onSubmit={handleJoin} className="mt-4 flex flex-col sm:flex-row gap-3">
             <input
               value={joinId}
               onChange={(e) => setJoinId(e.target.value)}
-              placeholder="abc123"
+              placeholder="abc123 or https://yourapp.com/session/abc123"
               className="flex-1 h-10 rounded-lg border border-surface-border bg-surface-overlay px-3 text-sm text-ink placeholder:text-ink-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             />
             <button
@@ -155,4 +159,3 @@ export const DashboardPage = () => {
     </div>
   )
 }
-
