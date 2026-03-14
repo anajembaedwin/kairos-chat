@@ -77,7 +77,13 @@ class InMemorySessionStore {
     }
     return null
   }
+
+  end(sessionId: string) {
+    const session = this.sessions.get(sessionId) || null
+    if (!session) return null
+    this.sessions.delete(sessionId)
+    return session
+  }
 }
 
 export const sessionStore = new InMemorySessionStore()
-

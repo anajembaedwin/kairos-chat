@@ -46,5 +46,22 @@ describe('sessions', () => {
     const joinC = await request(app).post(`/api/sessions/${id}/join`).set('Authorization', `Bearer ${c}`)
     expect(joinC.status).toBe(409)
   })
-})
 
+  it('POST /api/sessions/:id/end ends an active session for a member', async () => {
+    const a = signSession('a@example.com', 'a')
+    const b = signSession('b@example.com', 'b')
+
+    const created = await request(app).post('/api/sessions').set('Authorization', `Bearer ${a}`)
+    const id = created.body.id as string
+
+    await request(app).post(`/api/sessions/${id}/join`).set('Authorization', `Bearer ${a}`)
+    await request(app).post(`/api/sessions/${id}/join`).set('Authorization', `Bearer ${b}`)
+
+    const ended = await request(app).post(`/api/sessions/${id}/end`).set('Authorization', `Bearer ${a}`)
+    expect(ended.status).toBe(200)
+    expect(ended.body.ok).toBe(true)
+
+    const after = await request(app).get(`/api/sessions/${id}`)
+    expect(after.status).toBe(404)
+  })
+})

@@ -41,3 +41,25 @@ sessionsRouter.post('/:id/join', requireAuth, (req, res) => {
   res.json({ ok: true, session: joined.session })
 })
 
+sessionsRouter.post('/:id/end', requireAuth, (req, res) => {
+  const user = req.user
+  if (!user) {
+    res.status(401).json({ error: 'Unauthorized' })
+    return
+  }
+
+  const session = sessionStore.get(req.params.id)
+  if (!session) {
+    res.status(404).json({ error: 'Session not found' })
+    return
+  }
+
+  const isMember = session.users.some((u) => u.email === user.email)
+  if (!isMember) {
+    res.status(403).json({ error: 'Forbidden' })
+    return
+  }
+
+  sessionStore.end(req.params.id)
+  res.json({ ok: true })
+})
