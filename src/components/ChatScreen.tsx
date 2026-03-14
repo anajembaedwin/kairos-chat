@@ -7,6 +7,7 @@ import { useChat } from '@/hooks/useChat'
 import { User } from '@/types'
 import { getDateLabel, isSameDay } from '@/lib/dateUtils'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
+import { AnimatedMessage } from '@/components/AnimatedMessage'
 
 interface ChatScreenProps {
   user: User
@@ -258,9 +259,10 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
                   const showDateDivider =
                     !prevMessage ||
                     !isSameDay(prevMessage.created_at, message.created_at)
+                  const isNew = index === messages.length - 1
 
                   return (
-                    <div key={message.id}>
+                    <AnimatedMessage key={message.id} isNew={isNew}>
                       {showDateDivider && (
                         <DateDivider label={getDateLabel(message.created_at)} />
                       )}
@@ -268,7 +270,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
                         message={message}
                         isOwn={message.sender === user}
                       />
-                    </div>
+                    </AnimatedMessage>
                   )
                 })}
 
