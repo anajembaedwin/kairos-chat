@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import { MemoryRouter } from 'react-router-dom'
 import App from '@/App'
 
 jest.mock('@/components/LoginScreen', () => ({
@@ -22,22 +23,23 @@ jest.mock('@/components/ChatScreen', () => ({
 
 describe('App', () => {
   it('shows login first then chat after login', () => {
-    render(<App />)
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
+    )
     fireEvent.click(screen.getByText('mock-login'))
     expect(screen.getByText('mock-chat:User A')).toBeInTheDocument()
   })
 
-  it('logout triggers page reload', () => {
-    const reloadMock = jest.fn()
-    Object.defineProperty(window, 'location', {
-      value: { reload: reloadMock },
-      writable: true,
-    })
-
-    render(<App />)
+  it('logout returns to login', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <App />
+      </MemoryRouter>
+    )
     fireEvent.click(screen.getByText('mock-login'))
     fireEvent.click(screen.getByText('mock-leave'))
-    expect(reloadMock).toHaveBeenCalled()
+    expect(screen.getByText('mock-login')).toBeInTheDocument()
   })
 })
-

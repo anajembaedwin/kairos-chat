@@ -1,26 +1,18 @@
-import { UserProvider, useUser } from '@/context/UserContext'
-import { LoginScreen } from '@/components/LoginScreen'
-import { ChatScreen } from '@/components/ChatScreen'
-import { User } from '@/types'
-
-const AppContent = () => {
-  const { user, setUser } = useUser()
-
-  const handleLogout = () => {
-    window.location.reload()
-  }
-
-  if (!user) {
-    return <LoginScreen onLogin={(u: User) => setUser(u)} />
-  }
-
-  return <ChatScreen user={user} onLogout={handleLogout} />
-}
+import { Routes, Route, Navigate } from 'react-router-dom'
+import { UserProvider } from '@/context/UserContext'
+import { LandingPage } from '@/pages/LandingPage'
+import { LoginPage } from '@/pages/LoginPage'
+import { ChatPage } from '@/pages/ChatPage'
 
 const App = () => {
   return (
     <UserProvider>
-      <AppContent />
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/chat" element={<ChatPage />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
     </UserProvider>
   )
 }

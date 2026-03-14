@@ -31,6 +31,8 @@ describe('main', () => {
 
     const renderedElement = renderMock.mock.calls[0]?.[0] as React.ReactElement
     expect(renderedElement.type).toBe(React.StrictMode)
+
+    const inner = renderedElement.props.children as React.ReactElement
+    expect((inner.type as { name?: string }).name).toBe('BrowserRouter')
   })
 })
-
