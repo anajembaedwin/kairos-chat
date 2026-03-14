@@ -22,11 +22,7 @@ describe('MessageBubble', () => {
 
   it('renders the timestamp', () => {
     render(<MessageBubble message={mockMessage} isOwn={false} />)
-    const time = new Date(mockMessage.created_at).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    expect(screen.getByText(time)).toBeInTheDocument()
+    expect(screen.getByText(/just now|less than a minute ago/)).toBeInTheDocument()
   })
 
   it('applies own message styles when isOwn is true', () => {

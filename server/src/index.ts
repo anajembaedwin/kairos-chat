@@ -94,13 +94,37 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 3001
 
-const start = async () => {
+const start = async (port: number | string = PORT) => {
   await initDB()
-  httpServer.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`)
+  httpServer.listen(port, () => {
+    console.log(`Server running on port ${port}`)
   })
 }
 
-start()
+type AutoStartArgs = {
+  mainModule?: NodeModule | null
+  currentModule?: NodeModule
+  startFn?: () => unknown
+  env?: NodeJS.ProcessEnv
+}
 
-export { app, httpServer, io }
+const autoStart = (args: AutoStartArgs = {}) => {
+  const env = args.env ?? process.env
+  const isUnitTestInvocation = Boolean(args.mainModule && args.currentModule && args.startFn)
+  if (!isUnitTestInvocation) {
+    const isJest = typeof env.JEST_WORKER_ID !== 'undefined'
+    if (env.NODE_ENV === 'test' || isJest) return
+    if (env.AUTO_START === 'false') return
+  }
+
+  const mainModule = args.mainModule ?? require.main
+  const currentModule = args.currentModule ?? module
+  if (mainModule === currentModule) {
+    const startFn = args.startFn ?? (() => start())
+    void startFn()
+  }
+}
+
+autoStart()
+
+export { app, httpServer, io, start, autoStart }

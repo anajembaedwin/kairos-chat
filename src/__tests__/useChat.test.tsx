@@ -53,7 +53,12 @@ describe('useChat', () => {
       value: jest.fn(() =>
         Promise.resolve({
           ok: true,
-          json: () => Promise.resolve([] as Message[]),
+          json: () =>
+            Promise.resolve({
+              messages: [] as Message[],
+              hasMore: false,
+              nextCursor: null,
+            }),
         })
       ),
       writable: true,
@@ -112,6 +117,6 @@ describe('useChat', () => {
       render(<TestHarness user="User A" />)
     })
 
-    expect(screen.getByText('error:Could not load message history')).toBeInTheDocument()
+    expect(await screen.findByText('error:Could not load message history')).toBeInTheDocument()
   })
 })

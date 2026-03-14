@@ -42,9 +42,11 @@ describe('GET /api/messages', () => {
     const res = await request(app).get('/api/messages')
 
     expect(res.status).toBe(200)
-    expect(res.body).toHaveLength(2)
-    expect(res.body[0].sender).toBe('User A')
-    expect(res.body[1].text).toBe('Hi!')
+    expect(res.body).toEqual({
+      messages: mockMessages,
+      hasMore: false,
+      nextCursor: 1,
+    })
   })
 
   it('returns empty array when no messages', async () => {
@@ -53,7 +55,7 @@ describe('GET /api/messages', () => {
     const res = await request(app).get('/api/messages')
 
     expect(res.status).toBe(200)
-    expect(res.body).toEqual([])
+    expect(res.body).toEqual({ messages: [], hasMore: false, nextCursor: null })
   })
 
   it('returns 500 on database error', async () => {

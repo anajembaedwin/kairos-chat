@@ -30,7 +30,12 @@ describe('ChatScreen', () => {
     const fetchMock = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(mockMessages),
+        json: () =>
+          Promise.resolve({
+            messages: mockMessages,
+            hasMore: false,
+            nextCursor: null,
+          }),
       })
     )
     Object.defineProperty(globalThis, 'fetch', { value: fetchMock, writable: true })
@@ -69,7 +74,7 @@ describe('ChatScreen', () => {
   it('renders message input placeholder', async () => {
     render(<ChatScreen user="User A" onLogout={jest.fn()} />)
     await waitFor(() => expect(screen.getByText('Hey!')).toBeInTheDocument())
-    expect(screen.getByPlaceholderText('Type a message...')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/^Type a message/)).toBeInTheDocument()
   })
 
   it('emits sendMessage when Enter is pressed', async () => {
@@ -86,7 +91,7 @@ describe('ChatScreen', () => {
       connectHandler?.()
     })
 
-    const input = screen.getByPlaceholderText('Type a message...')
+    const input = screen.getByPlaceholderText(/^Type a message/)
     await act(async () => {
       fireEvent.change(input, { target: { value: 'Test message' } })
       fireEvent.keyDown(input, { key: 'Enter' })
@@ -102,7 +107,12 @@ describe('ChatScreen', () => {
     const fetchMock = jest.fn(() =>
       Promise.resolve({
         ok: true,
-        json: () => Promise.resolve([]),
+        json: () =>
+          Promise.resolve({
+            messages: [],
+            hasMore: false,
+            nextCursor: null,
+          }),
       })
     )
     Object.defineProperty(globalThis, 'fetch', { value: fetchMock, writable: true })
@@ -112,7 +122,7 @@ describe('ChatScreen', () => {
     })
 
     await waitFor(() => {
-      expect(screen.getByText('No messages yet.')).toBeInTheDocument()
+      expect(screen.getByText('No messages yet')).toBeInTheDocument()
     })
   })
 })
