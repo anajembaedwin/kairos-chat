@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { socket } from '@/lib/socket'
 import { Message, User } from '@/types'
+import { playMessageSound } from '@/lib/sound'
+import { setUnreadBadge, clearUnreadBadge, getUnreadCount } from '@/lib/tabNotification'
 
 const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
 
@@ -39,7 +41,6 @@ export const useChat = (user: User | null) => {
 
     socket.on('connect', () => {
       setConnected(true)
-      // Announce presence
       socket.emit('userOnline', user)
     })
 
@@ -60,7 +61,6 @@ export const useChat = (user: User | null) => {
       if (data.sender === user) return
       setTypingUser(data.isTyping ? data.sender : null)
 
-      // Auto-clear typing indicator after 3 seconds
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
       if (data.isTyping) {
         typingTimeoutRef.current = setTimeout(() => {
@@ -71,16 +71,22 @@ export const useChat = (user: User | null) => {
 
     socket.on('message', (message: Message) => {
       setMessages((prev) => {
-        // Remove any optimistic message from same sender with same text
         const withoutOptimistic = prev.filter(m =>
           !(m.status === 'sending' && m.sender === message.sender && m.text === message.text)
         )
-        // Check if real message already exists
         const alreadyExists = withoutOptimistic.find(m => m.id === message.id)
         if (alreadyExists) return withoutOptimistic
         return [...withoutOptimistic, { ...message, status: 'delivered' }]
       })
       setError(null)
+
+      // Play sound and update badge only for messages from others
+      if (message.sender !== user) {
+        playMessageSound()
+        if (document.hidden) {
+          setUnreadBadge(getUnreadCount() + 1)
+        }
+      }
     })
 
     socket.on('messageDelivered', ({ id }: { id: number }) => {
@@ -88,6 +94,14 @@ export const useChat = (user: User | null) => {
         prev.map(m => m.id === id ? { ...m, status: 'delivered' } : m)
       )
     })
+
+    // Clear badge when user returns to tab
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        clearUnreadBadge()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       socket.off('connect')
@@ -99,6 +113,8 @@ export const useChat = (user: User | null) => {
       socket.off('messageDelivered')
       socket.disconnect()
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      clearUnreadBadge()
     }
   }, [user])
 
@@ -106,7 +122,6 @@ export const useChat = (user: User | null) => {
     (text: string) => {
       if (!user || !text.trim()) return
 
-      // Add optimistic message immediately
       const optimisticMessage: Message = {
         id: Date.now(),
         sender: user,
@@ -115,7 +130,6 @@ export const useChat = (user: User | null) => {
         status: 'sending',
       }
       setMessages(prev => [...prev, optimisticMessage])
-
       socket.emit('sendMessage', { sender: user, text: text.trim() })
     },
     [user]
@@ -139,4 +153,4 @@ export const useChat = (user: User | null) => {
     sendMessage,
     emitTyping,
   }
-} 
+}

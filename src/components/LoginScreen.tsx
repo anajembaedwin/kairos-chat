@@ -56,6 +56,7 @@ export const LoginScreen = ({ onLogin }: LoginScreenProps) => {
               className="w-full mt-2"
               disabled={!selected}
               onClick={() => selected && onLogin(selected)}
+              aria-label="Enter chat"
             >
               Enter Chat
             </Button>
