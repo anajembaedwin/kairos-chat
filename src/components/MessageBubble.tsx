@@ -9,21 +9,20 @@ interface MessageBubbleProps {
 
 const SWITCH_TO_ABSOLUTE_AFTER_MINUTES = 60
 
-export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
-  const getDisplayTime = () => {
-    const messageDate = new Date(message.created_at)
-    const minutesAgo = (Date.now() - messageDate.getTime()) / 1000 / 60
-    return minutesAgo < SWITCH_TO_ABSOLUTE_AFTER_MINUTES
-      ? getRelativeTime(message.created_at)
-      : getMessageTime(message.created_at)
-  }
+const getDisplayTime = (createdAt: string): string => {
+  const messageDate = new Date(createdAt)
+  const minutesAgo = (Date.now() - messageDate.getTime()) / 1000 / 60
+  return minutesAgo < SWITCH_TO_ABSOLUTE_AFTER_MINUTES
+    ? getRelativeTime(createdAt)
+    : getMessageTime(createdAt)
+}
 
-  const [displayTime, setDisplayTime] = useState(getDisplayTime)
+export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
+  const [displayTime, setDisplayTime] = useState(() => getDisplayTime(message.created_at))
 
   useEffect(() => {
-    // Update every 30 seconds while message is recent
     const interval = setInterval(() => {
-      setDisplayTime(getDisplayTime())
+      setDisplayTime(getDisplayTime(message.created_at))
     }, 30000)
 
     return () => clearInterval(interval)
