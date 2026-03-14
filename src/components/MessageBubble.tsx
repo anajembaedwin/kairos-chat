@@ -1,15 +1,32 @@
+import { useState, useEffect } from 'react'
 import { Message } from '@/types'
+import { getMessageTime, getRelativeTime } from '@/lib/dateUtils'
 
 interface MessageBubbleProps {
   message: Message
   isOwn: boolean
 }
 
+const SWITCH_TO_ABSOLUTE_AFTER_MINUTES = 60
+
+const getDisplayTime = (createdAt: string): string => {
+  const messageDate = new Date(createdAt)
+  const minutesAgo = (Date.now() - messageDate.getTime()) / 1000 / 60
+  return minutesAgo < SWITCH_TO_ABSOLUTE_AFTER_MINUTES
+    ? getRelativeTime(createdAt)
+    : getMessageTime(createdAt)
+}
+
 export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
-  const time = new Date(message.created_at).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const [displayTime, setDisplayTime] = useState(() => getDisplayTime(message.created_at))
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDisplayTime(getDisplayTime(message.created_at))
+    }, 30000)
+
+    return () => clearInterval(interval)
+  }, [message.created_at])
 
   return (
     <div className={`flex flex-col gap-1 animate-slide-up ${isOwn ? 'items-end' : 'items-start'}`}>
@@ -23,7 +40,25 @@ export const MessageBubble = ({ message, isOwn }: MessageBubbleProps) => {
       >
         {message.text}
       </div>
-      <span className="text-xs text-ink-faint px-1">{time}</span>
+      <div className="flex items-center gap-1 px-1">
+        <span className="text-xs text-ink-faint transition-all">
+          {displayTime}
+        </span>
+        {isOwn && (
+          <span className="text-xs">
+            {message.status === 'sending' ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#4a4a60" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg width="16" height="12" viewBox="0 0 28 17" fill="none" stroke="#7c6af7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="1 9 6 14 14 4" />
+                <polyline points="10 9 15 14 26 4" />
+              </svg>
+            )}
+          </span>
+        )}
+      </div>
     </div>
   )
 }
