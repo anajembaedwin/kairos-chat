@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button'
 import { MessageBubble } from '@/components/MessageBubble'
 import { useChat } from '@/hooks/useChat'
 import { User } from '@/types'
+import { DateDivider } from '@/components/DateDivider'
+import { getDateLabel, isSameDay } from '@/lib/dateUtils'
 
 interface ChatScreenProps {
   user: User
@@ -143,13 +145,23 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
             </div>
           ) : (
             <div className="space-y-4">
-              {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  isOwn={message.sender === user}
-                />
-              ))}
+              {messages.map((message, index) => {
+                const prevMessage = messages[index - 1]
+                const showDateDivider =
+                  !prevMessage || !isSameDay(prevMessage.created_at, message.created_at)
+
+                return (
+                  <div key={message.id}>
+                    {showDateDivider && (
+                      <DateDivider label={getDateLabel(message.created_at)} />
+                    )}
+                    <MessageBubble
+                      message={message}
+                      isOwn={message.sender === user}
+                    />
+                  </div>
+                )
+              })}
 
               {/* Typing indicator */}
               {typingUser && (
