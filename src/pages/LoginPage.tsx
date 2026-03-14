@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiPost, ApiError } from '@/lib/api'
+import { apiPost, ApiError, getApiBase } from '@/lib/api'
 
 type MagicLinkResponse = { ok: true; link?: string }
 
@@ -9,6 +9,7 @@ export const LoginPage = () => {
   const [status, setStatus] = useState<'idle' | 'loading' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [devLink, setDevLink] = useState<string | null>(null)
+  const [lastAttemptUrl, setLastAttemptUrl] = useState<string | null>(null)
 
   const isValid = useMemo(() => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()), [email])
 
@@ -20,11 +21,19 @@ export const LoginPage = () => {
 
     setStatus('loading')
     try {
+      const apiBase = getApiBase()
+      const url = `${apiBase}/api/auth/magic-link`
+      setLastAttemptUrl(url || '/api/auth/magic-link')
       const res = await apiPost<MagicLinkResponse>('/api/auth/magic-link', { email })
       setDevLink(res.link ?? null)
       setStatus('sent')
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : 'Failed to send magic link'
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Failed to send magic link'
       setError(message)
       setStatus('idle')
     }
@@ -48,7 +57,7 @@ export const LoginPage = () => {
             <>
               <div className="text-sm font-semibold">Continue with email</div>
               <p className="text-sm text-ink-muted mt-1">
-                We’ll email you a secure link to sign in. No passwords.
+                We'll email you a secure link to sign in. No passwords.
               </p>
 
               <form onSubmit={onSubmit} className="mt-4 space-y-3">
@@ -70,7 +79,12 @@ export const LoginPage = () => {
 
                 {error && (
                   <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs text-red-400">
-                    {error}
+                    <div>{error}</div>
+                    {lastAttemptUrl && (
+                      <div className="mt-1 text-[11px] text-red-300/80 break-all">
+                        Request: {lastAttemptUrl}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -79,7 +93,7 @@ export const LoginPage = () => {
                   disabled={!isValid || status === 'loading'}
                   className="w-full inline-flex items-center justify-center rounded-lg bg-accent hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium h-11 px-4 transition-colors"
                 >
-                  {status === 'loading' ? 'Sending…' : 'Send magic link'}
+                  {status === 'loading' ? 'Sending...' : 'Send magic link'}
                 </button>
               </form>
 
@@ -128,4 +142,3 @@ export const LoginPage = () => {
     </div>
   )
 }
-

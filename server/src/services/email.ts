@@ -9,6 +9,19 @@ const sendWithResend = async (args: { to: string; from: string; link: string }) 
   const apiKey = process.env.RESEND_API_KEY
   if (!apiKey) return false
 
+  const html = `
+    <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height: 1.5;">
+      <p>Sign in to Kairos Chat:</p>
+      <p>
+        <a href="${args.link}" style="display:inline-block;background:#7c6af7;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;">
+          Sign in
+        </a>
+      </p>
+      <p style="color:#6b7280;font-size:12px;">If the button doesn't work, copy and paste this URL into your browser:</p>
+      <p style="font-size:12px;word-break:break-all;"><span>${args.link}</span></p>
+    </div>
+  `
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
@@ -20,7 +33,7 @@ const sendWithResend = async (args: { to: string; from: string; link: string }) 
       to: args.to,
       subject: 'Your sign-in link',
       text: `Sign in using this link: ${args.link}`,
-      html: `<p>Sign in using this link:</p><p><a href="${args.link}">${args.link}</a></p>`,
+      html,
     }),
   })
 
@@ -72,7 +85,20 @@ export const sendMagicLinkEmail = async ({ to, link }: SendMagicLinkArgs) => {
     from,
     to,
     subject: 'Your sign-in link',
-    text: `Sign in using this link: ${link}`,
-    html: `<p>Sign in using this link:</p><p><a href="${link}">${link}</a></p>`,
+    text: `Sign in to Kairos Chat:\n\n${link}\n\nIf you didn't request this, you can ignore this email.`,
+    html: `
+      <div style="font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; line-height: 1.5;">
+        <p>Sign in to Kairos Chat:</p>
+        <p>
+          <a href="${link}" style="display:inline-block;background:#7c6af7;color:#fff;padding:10px 14px;border-radius:10px;text-decoration:none;font-weight:600;">
+            Sign in
+          </a>
+        </p>
+        <p style="color:#6b7280;font-size:12px;">If the button doesn't work, copy and paste this URL into your browser:</p>
+        <p style="font-size:12px;word-break:break-all;">
+          <span>${link}</span>
+        </p>
+      </div>
+    `,
   })
 }

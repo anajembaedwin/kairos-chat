@@ -4,7 +4,15 @@ import { Message, User } from '@/types'
 import { playMessageSound } from '@/lib/sound'
 import { setUnreadBadge, clearUnreadBadge, getUnreadCount } from '@/lib/tabNotification'
 
-const SERVER_URL = import.meta.env.VITE_SERVER_URL || 'http://localhost:3001'
+const getServerUrl = () => {
+  const envBase = import.meta.env.VITE_SERVER_URL?.replace(/\/$/, '')
+  if (envBase) return envBase
+  const mode = import.meta.env.MODE || 'development'
+  if (mode === 'production') return ''
+  return 'http://localhost:3001'
+}
+
+const SERVER_URL = getServerUrl()
 
 interface MessagesResponse {
   messages: Message[]
