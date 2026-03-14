@@ -5,6 +5,9 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import { initDB, pool } from './db'
 import messagesRouter from './routes/messages'
+import { authRouter } from './routes/auth'
+import { sessionsRouter } from './routes/sessions'
+import { sessionStore } from './services/sessionStore'
 import { Message, CreateMessageBody } from './types'
 
 dotenv.config()
@@ -33,6 +36,8 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' })
 })
 
+app.use('/api/auth', authRouter)
+app.use('/api/sessions', sessionsRouter)
 app.use('/api/messages', messagesRouter)
 
 // Track online users: socketId -> username
@@ -40,6 +45,30 @@ const onlineUsers = new Map<string, string>()
 
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id)
+
+  socket.on('joinSession', (data: { sessionId: string; email: string; name: string }) => {
+    const sessionId = String(data?.sessionId || '').trim()
+    const email = String(data?.email || '').trim().toLowerCase()
+    const name = String(data?.name || '').trim() || email.split('@')[0]
+
+    if (!sessionId || !email) {
+      socket.emit('sessionError', { error: 'sessionId and email are required' })
+      return
+    }
+
+    const joined = sessionStore.join(sessionId, { email, name })
+    if (!joined.ok) {
+      socket.emit('sessionError', { error: joined.error === 'full' ? 'Session is full' : 'Session not found' })
+      return
+    }
+
+    sessionStore.attachSocket(sessionId, email, socket.id)
+    socket.join(sessionId)
+    io.to(sessionId).emit('sessionUsers', joined.session.users)
+    if (joined.session.users.length === 2) {
+      io.to(sessionId).emit('sessionStarted', { startedAt: joined.session.startedAt })
+    }
+  })
 
   // User comes online
   socket.on('userOnline', (username: string) => {
@@ -84,6 +113,10 @@ io.on('connection', (socket) => {
 
   // User disconnects
   socket.on('disconnect', () => {
+    const updatedSession = sessionStore.leaveBySocket(socket.id)
+    if (updatedSession) {
+      io.to(updatedSession.id).emit('sessionUsers', updatedSession.users)
+    }
     const username = onlineUsers.get(socket.id)
     onlineUsers.delete(socket.id)
     // Broadcast updated online users list

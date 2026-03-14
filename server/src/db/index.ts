@@ -21,5 +21,26 @@ export const initDB = async () => {
       created_at TIMESTAMP DEFAULT NOW()
     )
   `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id         SERIAL PRIMARY KEY,
+      email      VARCHAR(255) UNIQUE NOT NULL,
+      name       VARCHAR(100),
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS magic_tokens (
+      id         SERIAL PRIMARY KEY,
+      email      VARCHAR(255) NOT NULL,
+      token      VARCHAR(500) NOT NULL,
+      expires_at TIMESTAMP NOT NULL,
+      used       BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `)
+
   console.log('Database initialized')
 }
