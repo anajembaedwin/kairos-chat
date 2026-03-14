@@ -18,16 +18,22 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const scrollAreaRef = useRef<HTMLDivElement>(null)
+  const prevScrollHeightRef = useRef<number>(0)
   const typingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const {
     messages,
     loading,
+    loadingMore,
+    hasMore,
     connected,
     error,
     onlineUsers,
     typingUser,
     sendMessage,
     emitTyping,
+    loadMoreMessages,
   } = useChat(user)
 
   const otherUser = user === 'User A' ? 'User B' : 'User A'
@@ -49,6 +55,15 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
     }
   }, [input])
 
+  // Preserve scroll position when older messages are prepended
+  useEffect(() => {
+    if (!loadingMore && scrollAreaRef.current) {
+      const newScrollHeight = scrollAreaRef.current.scrollHeight
+      const diff = newScrollHeight - prevScrollHeightRef.current
+      scrollAreaRef.current.scrollTop = diff
+    }
+  }, [loadingMore])
+
   // Close emoji picker when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -63,6 +78,14 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.currentTarget
+    if (target.scrollTop < 50 && hasMore && !loadingMore) {
+      prevScrollHeightRef.current = target.scrollHeight
+      loadMoreMessages()
+    }
+  }, [hasMore, loadingMore, loadMoreMessages])
 
   const handleSend = useCallback(() => {
     if (!input.trim()) return
@@ -134,9 +157,14 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
               {otherUser} {isOtherOnline ? 'online' : 'offline'}
             </span>
           </div>
-            <Button variant="ghost" size="sm" onClick={onLogout} aria-label="Leave chat">
-              Leave
-            </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onLogout}
+            aria-label="Leave chat"
+          >
+            Leave
+          </Button>
         </div>
       </div>
 
@@ -149,80 +177,122 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
 
       {/* Messages */}
       <div className="flex-1 min-h-0">
-        <ScrollArea className="h-full px-4 py-4">
-          {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="flex gap-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className={`w-2 h-2 rounded-full bg-accent animate-pulse-dot ${
-                      i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-48 gap-3">
-              <svg
-                width="48"
-                height="48"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#4a4a60"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-              </svg>
-              <div className="text-center">
-                <p className="text-ink-muted text-sm font-medium">No messages yet</p>
-                <p className="text-ink-faint text-xs mt-1">Be the first to say hello 👋</p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {messages.map((message, index) => {
-                const prevMessage = messages[index - 1]
-                const showDateDivider =
-                  !prevMessage ||
-                  !isSameDay(prevMessage.created_at, message.created_at)
-
-                return (
-                  <div key={message.id}>
-                    {showDateDivider && (
-                      <DateDivider label={getDateLabel(message.created_at)} />
-                    )}
-                    <MessageBubble
-                      message={message}
-                      isOwn={message.sender === user}
+        <ScrollArea className="h-full">
+          <div
+            ref={scrollAreaRef}
+            onScroll={handleScroll}
+            className="h-full px-4 py-4 overflow-y-auto"
+          >
+            {loading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className={`w-2 h-2 rounded-full bg-accent animate-pulse-dot ${
+                        i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
+                      }`}
                     />
-                  </div>
-                )
-              })}
-
-              {/* Typing indicator */}
-              {typingUser && (
-                <div className="flex flex-col gap-1 items-start animate-slide-up">
-                  <span className="text-xs text-ink-faint px-1">{typingUser}</span>
-                  <div className="bg-surface-overlay border border-surface-border rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
-                    {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className={`w-1.5 h-1.5 rounded-full bg-ink-muted animate-pulse-dot ${
-                          i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
-                        }`}
-                      />
-                    ))}
-                  </div>
+                  ))}
                 </div>
-              )}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-48 gap-3">
+                <svg
+                  width="48"
+                  height="48"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#4a4a60"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <div className="text-center">
+                  <p className="text-ink-muted text-sm font-medium">No messages yet</p>
+                  <p className="text-ink-faint text-xs mt-1">Be the first to say hello 👋</p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
 
-              <div ref={bottomRef} />
-            </div>
-          )}
+                {/* Loading more indicator at top */}
+                {loadingMore && (
+                  <div className="flex justify-center py-2">
+                    <div className="flex gap-1">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className={`w-1.5 h-1.5 rounded-full bg-ink-faint animate-pulse-dot ${
+                            i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Load older messages button */}
+                {hasMore && !loadingMore && (
+                  <div className="flex justify-center py-2">
+                    <button
+                      aria-label="Load older messages"
+                      onClick={() => {
+                        if (scrollAreaRef.current) {
+                          prevScrollHeightRef.current = scrollAreaRef.current.scrollHeight
+                        }
+                        loadMoreMessages()
+                      }}
+                      className="text-xs text-accent hover:text-accent-hover transition-colors px-3 py-1 rounded-full border border-surface-border hover:border-accent/50"
+                    >
+                      Load older messages
+                    </button>
+                  </div>
+                )}
+
+                {/* Message list */}
+                {messages.map((message, index) => {
+                  const prevMessage = messages[index - 1]
+                  const showDateDivider =
+                    !prevMessage ||
+                    !isSameDay(prevMessage.created_at, message.created_at)
+
+                  return (
+                    <div key={message.id}>
+                      {showDateDivider && (
+                        <DateDivider label={getDateLabel(message.created_at)} />
+                      )}
+                      <MessageBubble
+                        message={message}
+                        isOwn={message.sender === user}
+                      />
+                    </div>
+                  )
+                })}
+
+                {/* Typing indicator */}
+                {typingUser && (
+                  <div className="flex flex-col gap-1 items-start animate-slide-up">
+                    <span className="text-xs text-ink-faint px-1">{typingUser}</span>
+                    <div className="bg-surface-overlay border border-surface-border rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
+                      {[0, 1, 2].map((i) => (
+                        <div
+                          key={i}
+                          className={`w-1.5 h-1.5 rounded-full bg-ink-muted animate-pulse-dot ${
+                            i === 0 ? 'delay-0' : i === 1 ? 'delay-[160ms]' : 'delay-[320ms]'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div ref={bottomRef} />
+              </div>
+            )}
+          </div>
         </ScrollArea>
       </div>
 
