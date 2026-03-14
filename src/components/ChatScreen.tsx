@@ -8,6 +8,7 @@ import { User } from '@/types'
 import { getDateLabel, isSameDay } from '@/lib/dateUtils'
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react'
 import { AnimatedMessage } from '@/components/AnimatedMessage'
+import { ScrollToBottom } from '@/components/ScrollToBottom'
 
 interface ChatScreenProps {
   user: User
@@ -177,7 +178,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
       )}
 
       {/* Messages */}
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 relative">
         <ScrollArea className="h-full">
           <div
             ref={scrollAreaRef}
@@ -296,6 +297,7 @@ export const ChatScreen = ({ user, onLogout }: ChatScreenProps) => {
             )}
           </div>
         </ScrollArea>
+        <ScrollToBottom scrollRef={scrollAreaRef} bottomRef={bottomRef} />
       </div>
 
       {/* Input */}
